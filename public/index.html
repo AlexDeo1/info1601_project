@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>VAL-anime</title>
+    <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: #f5f5f5;
+    }
+    nav {
+      background-color: #1e88e5;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+    }
+    #button {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: white;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+    }
+    #result {
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 1em;
+    }
+    .card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 10px;
+      width: 300px;
+      max-width: 100%;
+      text-align: center;
+    }
+    .card img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+    .container {
+      padding: 10px;
+    }
+    body {
+      background-image: url('back.jpg'); 
+      background-size: cover;         
+      background-position: center;    
+      background-repeat: no-repeat;   
+      background-attachment: fixed;  
+    }
+    h1 {
+      color: white;
+    }
+
+  </style>
+</head>
+<body>
+
+  <nav style="display: flex; justify-content: space-between; align-items: center;">
+    <span><img src="logo.webp" alt="Anime Logo" style="height: 50px; width: 50px;">VAL-anime</span>
+    <div>
+      <button onclick="showAll()">All</button>
+      <button onclick="showFavorites()">Favorites</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <section id="button">
+    <button onclick="renderAnime('Fantasy')">Fantasy</button>
+    <button onclick="renderAnime('Action')">Action</button>
+    <button onclick="renderAnime('Comedy')">Comedy</button>
+    <button onclick="renderAnime('Drama')">Drama</button>
+    <button onclick="renderAnime('Romance')">Romance</button>
+  </section>
+
+  <section id="result">
+    <h1>Select a genre to view anime</h1>
+  </section>
+
+  <script>
+    // logged in
+    if (localStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const apiKey = '5aa7f0eb8emshc28ca33365f3c0ap1d649ajsn54b925cadbae';
+    const apiHost = 'anime-db.p.rapidapi.com';
+
+    let currentGenre = '';
+    const result = document.getElementById('result');
+    const user = localStorage.getItem('username');
+    const animeMap = {};
+
+    async function renderAnime(genre) {
+      currentGenre = genre;
+      result.innerHTML = '<p>Loading...</p>';
+
+      const url = `https://anime-db.p.rapidapi.com/anime?page=1&size=10&genres=${encodeURIComponent(genre)}&sortBy=ranking&sortOrder=asc`;
+
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-host': apiHost,
+            'x-rapidapi-key': apiKey
+          }
+        });
+
+        const data = await response.json();
+        const animeList = data.data;
+
+        renderAnimeCards(animeList);
+      } catch (err) {
+        console.error('Error:', err);
+        result.innerHTML = '<p>Failed to load anime data.</p>';
+      }
+    }
+
+    function renderAnimeCards(animeList) {
+      const favorites = JSON.parse(localStorage.getItem(`${user}-favorites`) || '[]');
+      let html = '';
+
+      animeList.forEach(anime => {
+        const isFavorite = favorites.some(fav => fav._id === anime._id);
+        animeMap[anime._id] = anime;
+
+        html += `
+          <div class="card">
+            <img src="${anime.image}" alt="${anime.title}">
+            <div class="container">
+              <h3>${anime.title}</h3>
+              <p><strong>Genres:</strong> ${anime.genres.join(', ')}</p>
+              <p><strong>Episodes:</strong> ${anime.episodes}</p>
+              <button onclick="toggleFavoriteById('${anime._id}')">
+                ${isFavorite ? '★ Favorited' : '☆ Favorite'}
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      result.innerHTML = html;
+    }
+
+    function toggleFavoriteById(animeId) {
+      const anime = animeMap[animeId];
+      let favorites = JSON.parse(localStorage.getItem(`${user}-favorites`) || '[]');
+
+      const index = favorites.findIndex(fav => fav._id === anime._id);
+      if (index > -1) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push(anime);
+      }
+
+      localStorage.setItem(`${user}-favorites`, JSON.stringify(favorites));
+      if (currentGenre) renderAnime(currentGenre);
+      else showFavorites();
+    }
+
+    function showFavorites() {
+      const favorites = JSON.parse(localStorage.getItem(`${user}-favorites`) || '[]');
+      renderAnimeCards(favorites);
+    }
+
+    function showAll() {
+      if (currentGenre) renderAnime(currentGenre);
+      else result.innerHTML = '<p>Please select a genre.</p>';
+    }
+
+    function logout() {
+      localStorage.removeItem('loggedIn');
+      localStorage.removeItem('username');
+      window.location.href = 'login.html';
+    }
+  </script>
+
+</body>
+</html>
