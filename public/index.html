@@ -91,6 +91,8 @@
     </div>
   </nav>
 
+
+
   <section id="button">
     <button onclick="renderAnime('Fantasy')">Fantasy</button>
     <button onclick="renderAnime('Action')">Action</button>
@@ -109,6 +111,7 @@
       window.location.href = 'login.html';
     }
 
+    // api key
     const apiKey = '5aa7f0eb8emshc28ca33365f3c0ap1d649ajsn54b925cadbae';
     const apiHost = 'anime-db.p.rapidapi.com';
 
@@ -117,6 +120,7 @@
     const user = localStorage.getItem('username');
     const animeMap = {};
 
+    //fetch data
     async function renderAnime(genre) {
       currentGenre = genre;
       result.innerHTML = '<p>Loading...</p>';
@@ -168,6 +172,7 @@
       result.innerHTML = html;
     }
 
+    //favorite anime
     function toggleFavoriteById(animeId) {
       const anime = animeMap[animeId];
       let favorites = JSON.parse(localStorage.getItem(`${user}-favorites`) || '[]');
@@ -184,6 +189,7 @@
       else showFavorites();
     }
 
+    //all fvorited anime
     function showFavorites() {
       const favorites = JSON.parse(localStorage.getItem(`${user}-favorites`) || '[]');
       renderAnimeCards(favorites);
@@ -194,11 +200,13 @@
       else result.innerHTML = '<p>Please select a genre.</p>';
     }
 
+    //logout
     function logout() {
       localStorage.removeItem('loggedIn');
       localStorage.removeItem('username');
       window.location.href = 'login.html';
     }
+
   </script>
 
 </body>

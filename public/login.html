@@ -54,14 +54,35 @@
 
   <script>
     function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const storedUsers = JSON.parse(localStorage.getItem('users') || '{}');
+      const errorMsg = document.getElementById('error');
+  
+      // check for bob
       if (username === 'bob' && password === 'bobpass') {
-        localStorage.setItem('loggedIn', 'true')
+        localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('username', username);
         window.location.href = 'index.html';
+        return;
+      }
+  
+      // Check stored users
+      if (storedUsers[username]) {
+        if (storedUsers[username] === password) {
+          localStorage.setItem('loggedIn', 'true');
+          localStorage.setItem('username', username);
+          window.location.href = 'index.html';
+        } else {
+          errorMsg.textContent = 'Incorrect password';
+        }
       } else {
-        document.getElementById('error').textContent = 'Invalid username or password';
+        // save new users
+        storedUsers[username] = password;
+        localStorage.setItem('users', JSON.stringify(storedUsers));
+        localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('username', username);
+        window.location.href = 'index.html';
       }
     }
   </script>
